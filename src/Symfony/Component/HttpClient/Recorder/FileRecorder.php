@@ -14,13 +14,13 @@ namespace Symfony\Component\HttpClient\Recorder;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class Recorder implements RecorderInterface
+class FileRecorder implements RecorderInterface
 {
     private string $folder;
-    private \Closure $keyGenerator;
-    private ResponseSerializer $responseSerializer;
+    private $keyGenerator;
+    private ResponseSerializerInterface $responseSerializer;
 
-    public function __construct(string $folder, \Closure $keyGenerator, ResponseSerializer $responseSerializer)
+    public function __construct(string $folder, callable $keyGenerator, ResponseSerializerInterface $responseSerializer)
     {
         $this->folder = $folder;
         $this->keyGenerator = $keyGenerator;

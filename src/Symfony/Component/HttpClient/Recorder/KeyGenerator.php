@@ -29,8 +29,8 @@ class KeyGenerator
             $useHash = true;
         }
 
-        foreach ($options['headers'] as $name => $values) {
-            hash_update($ctx, sprintf('%s:%s', $name, implode(',', $values)));
+        foreach ($options['headers'] ?? [] as $name => $value) {
+            hash_update($ctx, sprintf('%s:%s', $name, $value));
             $useHash = true;
         }
 
@@ -38,6 +38,6 @@ class KeyGenerator
             $parts[] = substr(hash_final($ctx), 0, 6);
         }
 
-        return strtr(implode('-', $parts), ':/\\', '-');
+        return strtr(implode('-', $parts), ['://' => '-', '/' => '-']);
     }
 }

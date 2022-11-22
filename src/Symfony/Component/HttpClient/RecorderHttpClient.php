@@ -12,7 +12,8 @@
 namespace Symfony\Component\HttpClient;
 
 use Symfony\Component\HttpClient\Exception\TransportException;
-use Symfony\Component\HttpClient\Recorder\Recorder;
+use Symfony\Component\HttpClient\Recorder\FileRecorder;
+use Symfony\Component\HttpClient\Recorder\RecorderInterface;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpClient\Response\ResponseStream;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -34,10 +35,10 @@ class RecorderHttpClient implements HttpClientInterface, ResetInterface
     public const MODE_RECORD = 'record';
     public const MODE_REPLAY = 'replay';
 
-    private Recorder $recorder;
+    private RecorderInterface $recorder;
     private string $mode;
 
-    public function __construct(Recorder $recorder, string $mode = self::MODE_REPLAY, HttpClientInterface $client = null)
+    public function __construct(RecorderInterface $recorder, string $mode = self::MODE_REPLAY, HttpClientInterface $client = null)
     {
         $this->recorder = $recorder;
         $this->mode = $mode;
@@ -53,14 +54,14 @@ class RecorderHttpClient implements HttpClientInterface, ResetInterface
             $response = $this->client->request($method, $url, $options);
 
             $this->recorder->record($method, $url, $options, $response);
+        } else {
+            $response = $this->recorder->replay($method, $url, $options);
+            if (null === $response) {
+                throw new TransportException(sprintf('Unable to replay response for %s request to %s.', $method, $url));
+            }
         }
 
-        $response = $this->recorder->replay($method, $url, $options);
-        if (null === $response) {
-            throw new TransportException(sprintf('Unable to replay response for %s request to %s.', $method, $url));
-        }
-
-        return $response;
+        return (new MockHttpClient($response))->request($method, $url, $options);
     }
 
     public function stream(ResponseInterface|iterable $responses, float $timeout = null): ResponseStreamInterface
