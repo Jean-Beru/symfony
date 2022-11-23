@@ -39,48 +39,12 @@ class ResponseSerializer implements ResponseSerializerInterface
 
     public function deserialize(string $data): ResponseInterface
     {
-        $parts = unserialize($data, ['allowed_classes' => [Data::class]])->getValue(true);
+        if (false === $data = @unserialize($data, ['allowed_classes' => [Data::class]])) {
+            throw new RecorderException('Unable to unserialize recorded response.');
+        }
+
+        $parts = $data->getValue(true);
 
         return new MockResponse($parts[0], $parts[1]);
-    }
-
-    private function serializeHeaders(array $headers): string
-    {
-        $parts = [];
-        foreach ($headers as $name => $values) {
-            $name = strtolower(trim($name));
-
-            if ('set-cookie' === $name) {
-                foreach ($values as $value) {
-                    $parts[] = "{$name}:{$value}";
-                }
-            } else {
-                $parts[] = sprintf('%s: %s', $name, implode(', ', $values));
-            }
-        }
-
-        return implode(\PHP_EOL, $parts);
-    }
-
-    private function deserializeHeaders(string $data): array
-    {
-        if ('' === $data) {
-            return [];
-        }
-
-        $headers = [];
-
-        foreach (explode(\PHP_EOL, $data) as $row) {
-            [$name, $values] = explode(': ', $row, 2);
-            $name = strtolower(trim($name));
-
-            if ('set-cookie' === $name) {
-                $headers[$name][] = $values;
-            } else {
-                $headers[$name] = $values;
-            }
-        }
-
-        return $headers;
     }
 }
