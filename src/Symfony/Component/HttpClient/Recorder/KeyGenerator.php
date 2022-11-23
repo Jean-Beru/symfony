@@ -13,6 +13,13 @@ namespace Symfony\Component\HttpClient\Recorder;
 
 class KeyGenerator
 {
+    private string $prefix;
+
+    public function __construct(string $prefix = '')
+    {
+        $this->prefix = $prefix;
+    }
+
     public function __invoke(string $method, string $url, array $options = []): string
     {
         $useHash = false;
@@ -38,6 +45,6 @@ class KeyGenerator
             $parts[] = substr(hash_final($ctx), 0, 6);
         }
 
-        return strtr(implode('-', $parts), ['://' => '-', '/' => '-']);
+        return $this->prefix.strtr(implode('-', $parts), ['://' => '-', '/' => '-']);
     }
 }

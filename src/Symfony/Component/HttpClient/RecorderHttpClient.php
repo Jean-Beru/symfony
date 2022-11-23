@@ -12,7 +12,6 @@
 namespace Symfony\Component\HttpClient;
 
 use Symfony\Component\HttpClient\Exception\TransportException;
-use Symfony\Component\HttpClient\Recorder\FileRecorder;
 use Symfony\Component\HttpClient\Recorder\RecorderInterface;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\HttpClient\Response\ResponseStream;

@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\HttpClient\Recorder;
 
+use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Component\VarDumper\Cloner\Data;
 use Symfony\Component\VarDumper\Cloner\VarCloner;
@@ -37,10 +38,13 @@ class ResponseSerializer implements ResponseSerializerInterface
         ]));
     }
 
+    /**
+     * @throws TransportException
+     */
     public function deserialize(string $data): ResponseInterface
     {
         if (false === $data = @unserialize($data, ['allowed_classes' => [Data::class]])) {
-            throw new RecorderException('Unable to unserialize recorded response.');
+            throw new TransportException('Unable to unserialize recorded response.');
         }
 
         $parts = $data->getValue(true);

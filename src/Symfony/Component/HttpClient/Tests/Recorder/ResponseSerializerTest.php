@@ -12,8 +12,8 @@
 namespace Symfony\Component\HttpClient\Tests\Recorder;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
-use Symfony\Component\HttpClient\Recorder\RecorderException;
 use Symfony\Component\HttpClient\Recorder\ResponseSerializer;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\ResponseInterface;
@@ -22,7 +22,7 @@ class ResponseSerializerTest extends TestCase
 {
     public function testDeserializeException()
     {
-        $this->expectException(RecorderException::class);
+        $this->expectException(TransportException::class);
 
         $serializer = new ResponseSerializer();
         $serializer->deserialize('not_a_record');
