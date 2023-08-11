@@ -5,6 +5,7 @@ CHANGELOG
 ---
 
  * Make `HeaderBag::getDate()`, `Response::getDate()`, `getExpires()` and `getLastModified()` return a `DateTimeImmutable`
+ * Add `FormatRequestMatcher`
 
 6.3
 ---
