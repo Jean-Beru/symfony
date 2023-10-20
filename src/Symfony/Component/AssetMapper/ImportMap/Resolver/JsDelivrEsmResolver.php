@@ -13,6 +13,7 @@ namespace Symfony\Component\AssetMapper\ImportMap\Resolver;
 
 use Symfony\Component\AssetMapper\Exception\RuntimeException;
 use Symfony\Component\AssetMapper\ImportMap\PackageRequireOptions;
+use Symfony\Component\AssetMapper\ImportMap\Sri\SriHashGeneratorInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -32,7 +33,8 @@ final class JsDelivrEsmResolver implements PackageResolverInterface
         HttpClientInterface $httpClient = null,
         private readonly string $versionUrlPattern = self::URL_PATTERN_VERSION,
         private readonly string $distUrlPattern = self::URL_PATTERN_DIST,
-        private readonly string $distUrlCssPattern = self::URL_PATTERN_DIST_CSS
+        private readonly string $distUrlCssPattern = self::URL_PATTERN_DIST_CSS,
+        private readonly ?SriHashGeneratorInterface $sriHashGenerator = null,
     ) {
         $this->httpClient = $httpClient ?? HttpClient::create();
     }
@@ -105,14 +107,15 @@ final class JsDelivrEsmResolver implements PackageResolverInterface
 
             // final URL where it was redirected to
             $url = $response->getInfo('url');
-            $content = null;
+            $content = $integrity = null;
 
             if ($options->download) {
                 $content = $this->parseJsDelivrImports($response->getContent(), $packagesToRequire, $options->download);
+                $integrity = $this->sriHashGenerator?->generate($content);
             }
 
             $packageName = trim($options->packageName, '/');
-            $resolvedPackages[$packageName] = new ResolvedImportMapPackage($options, $url, $content);
+            $resolvedPackages[$packageName] = new ResolvedImportMapPackage($options, $url, $content, $integrity);
         }
 
         try {

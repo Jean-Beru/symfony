@@ -14,6 +14,7 @@ namespace Symfony\Component\AssetMapper\ImportMap\Resolver;
 use Symfony\Component\AssetMapper\Exception\RuntimeException;
 use Symfony\Component\AssetMapper\ImportMap\ImportMapManager;
 use Symfony\Component\AssetMapper\ImportMap\PackageRequireOptions;
+use Symfony\Component\AssetMapper\ImportMap\Sri\SriHashGeneratorInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -27,6 +28,7 @@ final class JspmResolver implements PackageResolverInterface
         HttpClientInterface $httpClient = null,
         private readonly string $provider = ImportMapManager::PROVIDER_JSPM,
         private readonly string $baseUri = self::BASE_URI,
+        private readonly ?SriHashGeneratorInterface $sriHashGenerator = null,
     ) {
         $this->httpClient = $httpClient ?? HttpClient::create();
     }
@@ -87,7 +89,7 @@ final class JspmResolver implements PackageResolverInterface
         }
 
         try {
-            return array_map(fn ($args) => new ResolvedImportMapPackage($args[0], $args[1], $args[2]?->getContent()), $resolvedPackages);
+            return array_map(fn ($args) => new ResolvedImportMapPackage($args[0], $args[1], $content = $args[2]?->getContent(), $this->sriHashGenerator?->generate($content)), $resolvedPackages);
         } catch (\Throwable $e) {
             foreach ($resolvedPackages as $args) {
                 $args[2]?->cancel();
