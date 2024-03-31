@@ -36,17 +36,34 @@ final class FeatureFlagDataCollector extends DataCollector implements LateDataCo
         $values = $this->featureChecker->getValues();
 
         $this->data['features'] = [];
+        $this->data['ratios'] = [];
         foreach ($this->featureRegistry->getNames() as $featureName) {
-            $this->data['features'][$featureName] = [
-                'is_enabled' => $checks[$featureName] ?? null,
-                'value' => $this->cloneVar($values[$featureName] ?? null),
-            ];
+            $this->data['features'][$featureName] ??= [];
+            $this->data['ratios'][$featureName] ??= [0, 0];
+            $this->data['ratios'][$featureName][1]++;
+
+            foreach ($checks[$featureName] ?? [] as [$expectedValue, $isEnabled]) {
+                if ($isEnabled) {
+                    $this->data['ratios'][$featureName][0]++;
+                }
+
+                $this->data['features'][$featureName][] = [
+                    'expected_value' => $this->cloneVar($expectedValue ?? null),
+                    'is_enabled' => $isEnabled,
+                    'value' => $this->cloneVar($values[$featureName] ?? null),
+                ];
+            }
         }
     }
 
     public function getFeatures(): array
     {
         return $this->data['features'] ?? [];
+    }
+
+    public function getRatios(): array
+    {
+        return $this->data['ratios'] ?? [];
     }
 
     public function getName(): string

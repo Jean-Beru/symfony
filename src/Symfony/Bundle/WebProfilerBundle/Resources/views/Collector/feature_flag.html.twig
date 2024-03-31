@@ -11,11 +11,11 @@
 
         {% set text %}
             <div class="sf-toolbar-info-group">
-                {% for feature_name, data in collector.features|filter(d => d.is_enabled is not null) %}
+                {% for feature_name, data in collector.ratios %}
                     <div class="sf-toolbar-info-piece">
                         <b>{{ loop.first ? 'Resolved features' : '' }}</b>
-                        <span class="sf-toolbar-status sf-toolbar-status-{{ data['is_enabled'] ? 'green' : 'red' }}">
-                            {{ feature_name }}
+                        <span class="sf-toolbar-status">
+                            {{ feature_name }} : {{ data[0] }} / {{ data[1] }}
                         </span>
                         <br />
                     </div>
@@ -84,33 +84,39 @@
             <tr>
                 <th>Feature</th>
                 <th>Resolved value</th>
+                <th>Expected</th>
                 <th>Enabled</th>
             </tr>
             </thead>
             <tbody>
-            {% for feature_name, data in collector.features %}
-                {% set result = data['is_enabled'] is not null ? (data['is_enabled'] ? 'enabled' : 'disabled') : 'unknown' %}
-                <tr class="feature-check feature-check-{{ result }}">
-                    <td>{{ feature_name }}</td>
-                    <td>
-                        {% if data['value'].value is not null %}
-                            {{ profiler_dump(data['value'], maxDepth=2) }}
-                        {% else %}
-                            <span class="text-muted">Not resolved</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if data['is_enabled'] is not null %}
-                            <span class="badge badge-{{ result }}">
-                                {{ result|capitalize }}
-                            </span>
-                        {% else %}
-                            <span class="badge badge-unknown">
-                                Not resolved
-                            </span>
-                        {% endif %}
-                    </td>
-                </tr>
+            {% for feature_name, checks in collector.features %}
+                {% for data in checks %}
+                    {% set result = data['is_enabled'] is not null ? (data['is_enabled'] ? 'enabled' : 'disabled') : 'unknown' %}
+                    <tr class="feature-check feature-check-{{ result }}">
+                        <td>{{ feature_name }}</td>
+                        <td>
+                            {% if data['value'].value is not null %}
+                                {{ profiler_dump(data['value'], maxDepth=2) }}
+                            {% else %}
+                                <span class="text-muted">Not resolved</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ profiler_dump(data['expected_value'], maxDepth=2) }}
+                        </td>
+                        <td>
+                            {% if data['is_enabled'] is not null %}
+                                <span class="badge badge-{{ result }}">
+                                    {{ result|capitalize }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-unknown">
+                                    Not resolved
+                                </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
             {% endfor %}
             </tbody>
         </table>

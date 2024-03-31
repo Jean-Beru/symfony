@@ -15,7 +15,7 @@ use Symfony\Component\FeatureFlag\FeatureCheckerInterface;
 
 final class TraceableFeatureChecker implements FeatureCheckerInterface
 {
-    /** @var array<string, bool> */
+    /** @var array<string, list<array{mixed, bool}>> */
     private array $checks = [];
     /** @var array<string, mixed> */
     private array $values = [];
@@ -27,7 +27,10 @@ final class TraceableFeatureChecker implements FeatureCheckerInterface
 
     public function isEnabled(string $featureName, mixed $expectedValue = true): bool
     {
-        $isEnabled = $this->checks[$featureName] = $this->decorated->isEnabled($featureName, $expectedValue);
+        $this->checks[$featureName] ??= [];
+        $isEnabled = $this->decorated->isEnabled($featureName, $expectedValue);
+        $this->checks[$featureName][] = [$expectedValue, $isEnabled];
+
         // Force logging value. It has no cost since value is cached by decorated FeatureChecker.
         $this->getValue($featureName);
 
@@ -41,7 +44,7 @@ final class TraceableFeatureChecker implements FeatureCheckerInterface
 
     public function getValue(string $featureName): mixed
     {
-        return $this->values[$featureName] = $this->decorated->getValue($featureName);
+        return $this->values[$featureName] ??= $this->decorated->getValue($featureName);
     }
 
     public function getChecks(): array
