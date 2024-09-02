@@ -9,8 +9,11 @@
  * file that was distributed with this source code.
  */
 
-namespace Symfony\Component\FeatureFlag\Exception;
+namespace Symfony\Component\FeatureFlag\ArgumentResolver;
 
-class FeatureNotFoundException extends RuntimeException
+use Symfony\Component\TypeInfo\Type;
+
+interface ArgumentValueResolverInterface
 {
+    public function resolve(string $name, Type $type): array;
 }
