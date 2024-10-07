@@ -17,6 +17,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
+use Symfony\Component\Security\Http\Command\OidcTokenGenerateCommand;
 
 /**
  * Configures a token handler for decoding and validating an OIDC token.
@@ -41,6 +42,24 @@ class OidcTokenHandlerFactory implements TokenHandlerFactoryInterface
         $tokenHandlerDefinition->replaceArgument(1, (new ChildDefinition('security.access_token_handler.oidc.jwkset'))
             ->replaceArgument(0, $config['keyset'])
         );
+
+        // Generate command
+        if (!$container->hasDefinition('security.access_token_handler.oidc.command.generate')) {
+            $container
+                ->register('security.access_token_handler.oidc.command.generate', OidcTokenGenerateCommand::class)
+                ->addTag('console.command')
+            ;
+        }
+        $firewall = substr($id, strlen('security.access_token_handler.'));
+        $container->getDefinition('security.access_token_handler.oidc.command.generate')
+            ->addMethodCall('addGenerator', [$firewall, (new ChildDefinition('security.access_token_handler.oidc.generator'))
+                ->replaceArgument(0, (new ChildDefinition('security.access_token_handler.oidc.signature'))->replaceArgument(0, $config['algorithms']))
+                ->replaceArgument(1, (new ChildDefinition('security.access_token_handler.oidc.jwkset'))->replaceArgument(0, $config['keyset']))
+                ->replaceArgument(2, $config['audience'])
+                ->replaceArgument(3, $config['issuers'])
+                ->replaceArgument(4, $config['claim'])
+            ])
+        ;
     }
 
     public function getKey(): string

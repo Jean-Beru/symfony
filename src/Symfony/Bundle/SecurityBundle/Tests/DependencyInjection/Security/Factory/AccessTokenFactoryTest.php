@@ -257,6 +257,50 @@ class AccessTokenFactoryTest extends TestCase
         $this->assertEquals($expected, $container->getDefinition('security.access_token_handler.firewall1')->getArguments());
     }
 
+    public function testOidcTokenGenerator()
+    {
+        $container = new ContainerBuilder();
+        $jwkset = '{"keys":[{"kty":"EC","crv":"P-256","x":"FtgMtrsKDboRO-Zo0XC7tDJTATHVmwuf9GK409kkars","y":"rWDE0ERU2SfwGYCo1DWWdgFEbZ0MiAXLRBBOzBgs_jY","d":"4G7bRIiKih0qrFxc0dtvkHUll19tTyctoCR3eIbOrO0"},{"kty":"EC","crv":"P-256","x":"0QEAsI1wGI-dmYatdUZoWSRWggLEpyzopuhwk-YUnA4","y":"KYl-qyZ26HobuYwlQh-r0iHX61thfP82qqEku7i0woo","d":"iA_TV2zvftni_9aFAQwFO_9aypfJFCSpcCyevDvz220"}]}';
+        $config = [
+            'token_handler' => [
+                'oidc' => [
+                    'algorithms' => ['RS256', 'ES256'],
+                    'issuers' => ['https://www.example.com'],
+                    'audience' => 'audience',
+                    'keyset' => $jwkset,
+                ],
+            ],
+        ];
+
+        $factory = new AccessTokenFactory($this->createTokenHandlerFactories());
+        $finalizedConfig = $this->processConfig($config, $factory);
+
+        $factory->createAuthenticator($container, 'firewall1', $finalizedConfig, 'userprovider');
+
+        $this->assertTrue($container->hasDefinition('security.access_token_handler.oidc.command.generate'));
+        $this->assertTrue($container->getDefinition('security.access_token_handler.oidc.command.generate')->hasMethodCall('addGenerator'));
+    }
+
+    public function testOidcTokenGeneratorCommandWithNoTokenHandler()
+    {
+        $container = new ContainerBuilder();
+        $config = [
+            'token_handler' => [
+                'oidc_user_info' => [
+                    'base_uri' => 'https://www.example.com/realms/demo/protocol/openid-connect/userinfo',
+                    'client' => 'oidc.client',
+                ],
+            ],
+        ];
+
+        $factory = new AccessTokenFactory($this->createTokenHandlerFactories());
+        $finalizedConfig = $this->processConfig($config, $factory);
+
+        $factory->createAuthenticator($container, 'firewall1', $finalizedConfig, 'userprovider');
+
+        $this->assertFalse($container->hasDefinition('security.access_token_handler.oidc.command.generate'));
+    }
+
     public function testOidcUserInfoTokenHandlerConfigurationWithExistingClient()
     {
         $container = new ContainerBuilder();

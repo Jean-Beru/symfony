@@ -27,10 +27,12 @@ use Jose\Component\Signature\Algorithm\RS512;
 use Symfony\Component\Security\Http\AccessToken\ChainAccessTokenExtractor;
 use Symfony\Component\Security\Http\AccessToken\FormEncodedBodyExtractor;
 use Symfony\Component\Security\Http\AccessToken\HeaderAccessTokenExtractor;
+use Symfony\Component\Security\Http\AccessToken\Oidc\OidcTokenGenerator;
 use Symfony\Component\Security\Http\AccessToken\Oidc\OidcTokenHandler;
 use Symfony\Component\Security\Http\AccessToken\Oidc\OidcUserInfoTokenHandler;
 use Symfony\Component\Security\Http\AccessToken\QueryAccessTokenExtractor;
 use Symfony\Component\Security\Http\Authenticator\AccessTokenAuthenticator;
+use Symfony\Component\Security\Http\Command\OidcTokenGenerateCommand;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 return static function (ContainerConfigurator $container) {
@@ -135,5 +137,16 @@ return static function (ContainerConfigurator $container) {
 
         ->set('security.access_token_handler.oidc.signature.PS512', PS512::class)
             ->tag('security.access_token_handler.oidc.signature_algorithm')
+
+        ->set('security.access_token_handler.oidc.generator', OidcTokenGenerator::class)
+            ->abstract()
+            ->args([
+                abstract_arg('signature algorithm'),
+                abstract_arg('signature key'),
+                abstract_arg('audience'),
+                abstract_arg('issuers'),
+                abstract_arg('claim'),
+                service('clock'),
+            ])
     ;
 };

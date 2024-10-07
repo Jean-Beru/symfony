@@ -109,7 +109,7 @@ final class AccessTokenFactory extends AbstractFactory implements StatelessAuthe
         $failureHandler = isset($config['failure_handler']) ? new Reference($this->createAuthenticationFailureHandler($container, $firewallName, $config)) : null;
         $authenticatorId = \sprintf('security.authenticator.access_token.%s', $firewallName);
         $extractorId = $this->createExtractor($container, $firewallName, $config['token_extractors']);
-        $tokenHandlerId = $this->createTokenHandler($container, $firewallName, $config['token_handler'], $userProviderId);
+        $tokenHandlerId = $this->createTokenHandler($container, $firewallName, $config['token_handler']);
 
         $container
             ->setDefinition($authenticatorId, new ChildDefinition('security.authenticator.access_token'))
@@ -148,7 +148,7 @@ final class AccessTokenFactory extends AbstractFactory implements StatelessAuthe
         return $extractorId;
     }
 
-    private function createTokenHandler(ContainerBuilder $container, string $firewallName, array $config, ?string $userProviderId): string
+    private function createTokenHandler(ContainerBuilder $container, string $firewallName, array $config): string
     {
         $key = array_keys($config)[0];
         $id = \sprintf('security.access_token_handler.%s', $firewallName);
@@ -158,7 +158,7 @@ final class AccessTokenFactory extends AbstractFactory implements StatelessAuthe
                 continue;
             }
 
-            $factory->create($container, $id, $config[$key], $userProviderId);
+            $factory->create($container, $id, $config[$key]);
         }
 
         return $id;
