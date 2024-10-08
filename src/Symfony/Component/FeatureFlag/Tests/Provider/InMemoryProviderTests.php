@@ -12,32 +12,28 @@
 namespace Symfony\Component\FeatureFlag\Tests\Provider;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\FeatureFlag\ArgumentResolver\ArgumentResolverInterface;
 use Symfony\Component\FeatureFlag\Provider\InMemoryProvider;
 
 class InMemoryProviderTests extends TestCase
 {
-    private InMemoryProvider $provider;
-
-    protected function setUp(): void
-    {
-        $this->provider = new InMemoryProvider([
-            'first' => fn () => true,
-            'second' => fn () => false,
-            'exception' => fn () => throw new \LogicException('Should not be called.'),
-        ]);
-    }
-
     public function testHas()
     {
-        $this->assertTrue($this->provider->has('first'));
-        $this->assertTrue($this->provider->has('second'));
-        $this->assertTrue($this->provider->has('exception'));
-        $this->assertFalse($this->provider->has('unknown'));
+        $provider = new InMemoryProvider([
+            'feature' => fn () => true,
+        ]);
+
+        $this->assertTrue($provider->has('feature'));
+        $this->assertFalse($provider->has('unknown'));
     }
 
     public function testGet()
     {
-        $feature = $this->provider->get('first');
+        $provider = new InMemoryProvider([
+            'feature' => fn () => true,
+        ]);
+
+        $feature = $provider->get('feature');
 
         $this->assertIsCallable($feature);
         $this->assertTrue($feature());
@@ -45,12 +41,18 @@ class InMemoryProviderTests extends TestCase
 
     public function testGetLazy()
     {
-        $this->assertIsCallable($this->provider->get('exception'));
+        $provider = new InMemoryProvider([
+            'exception' => fn () => throw new \LogicException('Should not be called.'),
+        ]);
+
+        $this->assertIsCallable($provider->get('exception'));
     }
 
     public function testGetNotFound()
     {
-        $feature = $this->provider->get('unknown');
+        $provider = new InMemoryProvider([]);
+
+        $feature = $provider->get('unknown');
 
         $this->assertIsCallable($feature);
         $this->assertFalse($feature());
@@ -58,6 +60,26 @@ class InMemoryProviderTests extends TestCase
 
     public function testGetNames()
     {
-        $this->assertSame(['first', 'second', 'exception'], $this->provider->getNames());
+        $provider = new InMemoryProvider([
+            'first' => fn () => true,
+            'second' => fn () => false,
+        ]);
+
+        $this->assertSame(['first', 'second'], $provider->getNames());
+    }
+
+    public function testGetWithArgumentResolver()
+    {
+        $argumentResolver = $this->createConfiguredMock(ArgumentResolverInterface::class, [
+            'getArguments' => [42, 'value'],
+        ]);
+        $provider = new InMemoryProvider(
+            [
+                'feature' => fn (int $a, string $b) => $a.$b,
+            ],
+            $argumentResolver,
+        );
+
+        $this->assertSame('42value', $provider->get('feature')());
     }
 }

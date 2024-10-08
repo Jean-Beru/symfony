@@ -21,6 +21,7 @@
     },
     "require-dev": {
         "symfony/http-kernel": "^7.2",
+        "symfony/type-info": "^7.2",
         "symfony/var-dumper": "^7.2"
     },
     "autoload": {
