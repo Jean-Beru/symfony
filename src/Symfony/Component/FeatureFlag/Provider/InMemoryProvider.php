@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\FeatureFlag\Provider;
 
-use Symfony\Component\FeatureFlag\ArgumentResolver\ArgumentResolver;
+use Symfony\Component\FeatureFlag\ArgumentResolver\ArgumentResolverInterface;
 
 final class InMemoryProvider implements ProviderInterface
 {
@@ -20,6 +20,7 @@ final class InMemoryProvider implements ProviderInterface
      */
     public function __construct(
         private readonly array $features,
+        private readonly ArgumentResolverInterface|null $argumentResolver = null,
     ) {
     }
 
@@ -30,7 +31,13 @@ final class InMemoryProvider implements ProviderInterface
 
     public function get(string $featureName): \Closure
     {
-        return $this->features[$featureName] ?? fn() => false;
+        $feature = $this->features[$featureName] ?? fn() => false;
+
+        return function() use ($feature): mixed {
+            $arguments = $this->argumentResolver?->getArguments($feature) ?? [];
+
+            return $feature(...$arguments);
+        };
     }
 
     public function getNames(): array
