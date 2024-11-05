@@ -32,7 +32,10 @@ class FeatureCheckerTest extends TestCase
     public function testGetValue()
     {
         $this->assertSame(42, $this->featureChecker->getValue('feature_integer'));
+    }
 
+    public function testGetValueCache()
+    {
         $this->assertIsInt($value = $this->featureChecker->getValue('feature_random'));
         $this->assertSame($value, $this->featureChecker->getValue('feature_random'));
     }
@@ -50,29 +53,11 @@ class FeatureCheckerTest extends TestCase
         $this->assertSame($expectedResult, $this->featureChecker->isEnabled($featureName));
     }
 
-    public static function provideIsEnabled()
+    public static function provideIsEnabled(): iterable
     {
-        yield '"true" without expected value' => ['feature_true', true];
-        yield '"false" without expected value' => ['feature_false', false];
-        yield 'an integer without expected value' => ['feature_integer', false];
+        yield '"true"' => ['feature_true', true];
+        yield '"false"' => ['feature_false', false];
+        yield 'an integer' => ['feature_integer', false];
         yield 'an unknown feature' => ['unknown_feature', false];
-    }
-
-    /**
-     * @dataProvider providesEnabledComparedToAnExpectedValue
-     */
-    public function testIsEnabledComparedToAnExpectedValue(string $featureName, mixed $expectedValue, bool $expectedResult)
-    {
-        $this->assertSame($expectedResult, $this->featureChecker->isEnabled($featureName, $expectedValue));
-    }
-
-    public static function providesEnabledComparedToAnExpectedValue()
-    {
-        yield '"true" and the same expected value' => ['feature_true', true, true];
-        yield '"true" and a different expected value' => ['feature_true', false, false];
-        yield '"false" and the same expected value' => ['feature_false', true, false];
-        yield '"false" and a different expected value' => ['feature_false', false, true];
-        yield 'an integer and the same expected value' => ['feature_integer', 42, true];
-        yield 'an integer and a different expected value' => ['feature_integer', 1, false];
     }
 }

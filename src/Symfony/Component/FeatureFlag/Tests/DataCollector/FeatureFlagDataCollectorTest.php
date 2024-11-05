@@ -16,7 +16,6 @@ use Symfony\Component\FeatureFlag\DataCollector\FeatureFlagDataCollector;
 use Symfony\Component\FeatureFlag\Debug\TraceableFeatureChecker;
 use Symfony\Component\FeatureFlag\FeatureChecker;
 use Symfony\Component\FeatureFlag\Provider\InMemoryProvider;
-use Symfony\Component\VarDumper\Cloner\Data;
 
 class FeatureFlagDataCollectorTest extends TestCase
 {
@@ -24,6 +23,7 @@ class FeatureFlagDataCollectorTest extends TestCase
     {
         $featureRegistry = new InMemoryProvider([
             'feature_true' => fn () => true,
+            'feature_false' => fn () => false,
             'feature_integer' => fn () => 42,
             'feature_random' => fn () => random_int(1, 42),
         ]);
@@ -31,47 +31,44 @@ class FeatureFlagDataCollectorTest extends TestCase
         $dataCollector = new FeatureFlagDataCollector($featureRegistry, $traceableFeatureChecker);
 
         $traceableFeatureChecker->isEnabled('feature_true');
-        $traceableFeatureChecker->isEnabled('feature_integer', 1);
+        $traceableFeatureChecker->isEnabled('feature_false');
+        $traceableFeatureChecker->isEnabled('feature_unknown');
+        $traceableFeatureChecker->getValue('feature_integer');
+        $traceableFeatureChecker->getValue('feature_integer');
 
-        $this->assertSame([], $dataCollector->getChecks());
+        $this->assertSame([], $dataCollector->getResolved());
 
         $dataCollector->lateCollect();
 
-        $data = array_map(fn (Data $v): mixed => $v->getValue(), $dataCollector->getResolvedValues());
-        $this->assertSame(
-            [
-                'feature_true' => true,
-                'feature_integer' => 42,
-            ],
-            $data,
-        );
-
         $data = array_map(
-            fn ($checks) => array_map(function (array $a): array {
-                $a['found'] = $a['found']->getValue();
-                $a['expected_value'] = $a['expected_value']->getValue();
+            function (array $a): array {
+                $a['value'] = $a['value']->getValue();
 
                 return $a;
-            }, $checks),
-            $dataCollector->getChecks(),
+            },
+            $dataCollector->getResolved(),
         );
         $this->assertSame(
             [
                 'feature_true' => [
-                    [
-                        'found' => true,
-                        'expected_value' => true,
-                        'is_enabled' => true,
-                        'calls' => 1,
-                    ],
+                    'status' => 'enabled',
+                    'value' => true,
+                    'calls' => 1,
+                ],
+                'feature_false' => [
+                    'status' => 'disabled',
+                    'value' => false,
+                    'calls' => 1,
+                ],
+                'feature_unknown' => [
+                    'status' => 'not_found',
+                    'value' => false,
+                    'calls' => 1,
                 ],
                 'feature_integer' => [
-                    [
-                        'found' => true,
-                        'expected_value' => 1,
-                        'is_enabled' => false,
-                        'calls' => 1,
-                    ],
+                    'status' => 'resolved',
+                    'value' => 42,
+                    'calls' => 2,
                 ],
             ],
             $data,

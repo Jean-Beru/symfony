@@ -41,7 +41,7 @@ final class ChainProvider implements ProviderInterface
             }
         }
 
-        return fn() => false;
+        return fn () => false;
     }
 
     public function getNames(): array

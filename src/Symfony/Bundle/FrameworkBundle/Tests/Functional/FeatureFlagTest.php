@@ -66,7 +66,7 @@ class FeatureFlagTest extends AbstractWebTestCase
     public function testFeatureFlagAssertionsWithDuplicate()
     {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Feature "Symfony\Bundle\FrameworkBundle\Tests\Fixtures\FeatureFlag\ClassFeature" already defined.');
+        $this->expectExceptionMessage('Feature "Symfony\Bundle\FrameworkBundle\Tests\Fixtures\FeatureFlag\ClassFeature" already defined in the "feature_flag.provider.in_memory" provider.');
 
         static::bootKernel(['test_case' => 'FeatureFlag', 'root_config' => 'config_with_duplicate.yml']);
     }

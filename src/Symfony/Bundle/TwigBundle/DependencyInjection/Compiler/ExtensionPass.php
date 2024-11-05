@@ -54,6 +54,12 @@ class ExtensionPass implements CompilerPassInterface
             $container->removeDefinition('twig.runtime.importmap');
         }
 
+        if (!$container->has('feature_flag.feature_checker')) {
+            // edge case where FeatureFlag is installed, but not enabled
+            $container->removeDefinition('twig.extension.feature_flag');
+            $container->removeDefinition('twig.runtime.feature_flag');
+        }
+
         $viewDir = \dirname((new \ReflectionClass(\Symfony\Bridge\Twig\Extension\FormExtension::class))->getFileName(), 2).'/Resources/views';
         $templateIterator = $container->getDefinition('twig.template_iterator');
         $templatePaths = $templateIterator->getArgument(1);

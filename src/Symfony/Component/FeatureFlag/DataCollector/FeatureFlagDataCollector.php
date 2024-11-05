@@ -36,41 +36,24 @@ final class FeatureFlagDataCollector extends DataCollector implements LateDataCo
 
     public function lateCollect(): void
     {
-        $this->data['resolvedValues'] = [];
-        foreach ($this->featureChecker->getResolvedValues() as $featureName => $resolvedValue) {
-            $this->data['resolvedValues'][$featureName] = $this->cloneVar($resolvedValue);
+        $this->data['resolved'] = [];
+        foreach ($this->featureChecker->getResolvedValues() as $featureName => $info) {
+            $this->data['resolved'][$featureName] = [
+                'status' => $this->provider->has($featureName) ? $info['status'] : 'not_found',
+                'value' => $this->cloneVar($info['value']),
+                'calls' => $info['calls'],
+            ];
         }
 
-        $this->data['checks'] = [];
-        foreach ($this->featureChecker->getChecks() as $featureName => $checks) {
-            $this->data['checks'][$featureName] = array_map(
-                fn (array $check): array => [
-                    'found' => $this->cloneVar($this->provider->has($featureName)),
-                    'expected_value' => $this->cloneVar($check['expectedValue']),
-                    'is_enabled' => $check['isEnabled'],
-                    'calls' => $check['calls'],
-                ],
-                $checks,
-            );
-        }
-
-        $this->data['not_resolved'] = array_values(array_diff($this->provider->getNames(), array_keys($this->data['resolvedValues'])));
+        $this->data['not_resolved'] = array_values(array_diff($this->provider->getNames(), array_keys($this->data['resolved'])));
     }
 
     /**
-     * @return array<string, Data>
+     * @return array<string, array{status: 'not_found'|'resolved'|'enabled'|'disabled', value: Data, calls: int}>
      */
-    public function getResolvedValues(): array
+    public function getResolved(): array
     {
-        return $this->data['resolvedValues'] ?? [];
-    }
-
-    /**
-     * @return array<string, array{found: Data, expected_value: Data, is_enabled: bool, calls: int}>
-     */
-    public function getChecks(): array
-    {
-        return $this->data['checks'] ?? [];
+        return $this->data['resolved'] ?? [];
     }
 
     /**

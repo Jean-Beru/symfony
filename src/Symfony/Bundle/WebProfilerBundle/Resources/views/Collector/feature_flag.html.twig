@@ -3,22 +3,26 @@
 {% block page_title 'Feature Flag' %}
 
 {% block toolbar %}
-    {% if 0 < collector.resolvedValues|length %}
+    {% if 0 < collector.resolved|length %}
         {% set icon %}
             <img alt="Feature Flag" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAABVElEQVRIie2UO0oEURBFzxM/YGroAgQNxETUwEzwiytQ8/GzAhfhEnQNYqaJ4IyCv1QjERQjB1HEQDkGU8qzmRkHNJwLTcOtqtNVr6sb2mrrX6X2qOvqsfpi63qJmjW1O2emDN4P7AHDQAW4BpaznEpcCRgHxsLfAR4z7xKYTyndFTu/VKvqtNqnXkR3VXW6zrQzETtTuwre+Y9J1I2AFeHWg2d1s5Gz2sxDPVHLGfxVfVLLjeBZ7XExL7wKQEd4g8AVsA8MAIvAB/DrA4AjYKiR15mZK8BbwA+A3hbg3003j9ZGelen1A51O86x8iu5VntUxyvnxnoAlzL4YdxnmsDnIqfUzPta0wv1I4Kbapf6EGs32wBeVU/VzoJ39rWmxQ9tFxgBboBbYDJjnlB76QmYAEapnf1WwTsHFlJK9/VG7lZXY2WfbV3PUVOy8Ktoq62/6xORLdg+h+zBmgAAAABJRU5ErkJggg==" />
-            <span class="sf-toolbar-value">{{ collector.resolvedValues|length }}</span>
+            <span class="sf-toolbar-value">{{ collector.resolved|length }}</span>
         {% endset %}
 
         {% set text %}
             <div class="sf-toolbar-info-group">
-                {% for feature_name, checks in collector.checks %}
+                {% set color_map = {
+                    'not_found': 'gray',
+                    'resolved': 'green',
+                    'disabled': 'red',
+                    'enabled': 'green',
+                } %}
+                {% for feature_name, info in collector.resolved %}
                     <div class="sf-toolbar-info-piece">
-                        <b>{{ loop.first ? 'Resolved features' : '' }}</b>
-                        {% for check in checks %}
-                            <span class="sf-toolbar-status sf-toolbar-status-{{ check.is_enabled ? 'green' : 'red' }}">
-                                {{ feature_name }}
-                            </span>
-                        {% endfor %}
+                        <b>{{ feature_name }}</b>
+                        <span class="sf-toolbar-status sf-toolbar-status-{{ color_map[info.status] }}">
+                            {{ info.status|capitalize|replace({'_': ' '}) }}
+                        </span>
                         <br />
                     </div>
                 {% endfor %}
@@ -30,7 +34,7 @@
 {% endblock %}
 
 {% block menu %}
-    <span class="label {{ collector.resolvedValues|length is same as(0) ? 'disabled' }}">
+    <span class="label {{ collector.resolved|length is same as(0) ? 'disabled' }}">
         <span class="icon"><img alt="Feature Flag" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAABVElEQVRIie2UO0oEURBFzxM/YGroAgQNxETUwEzwiytQ8/GzAhfhEnQNYqaJ4IyCv1QjERQjB1HEQDkGU8qzmRkHNJwLTcOtqtNVr6sb2mrrX6X2qOvqsfpi63qJmjW1O2emDN4P7AHDQAW4BpaznEpcCRgHxsLfAR4z7xKYTyndFTu/VKvqtNqnXkR3VXW6zrQzETtTuwre+Y9J1I2AFeHWg2d1s5Gz2sxDPVHLGfxVfVLLjeBZ7XExL7wKQEd4g8AVsA8MAIvAB/DrA4AjYKiR15mZK8BbwA+A3hbg3003j9ZGelen1A51O86x8iu5VntUxyvnxnoAlzL4YdxnmsDnIqfUzPta0wv1I4Kbapf6EGs32wBeVU/VzoJ39rWmxQ9tFxgBboBbYDJjnlB76QmYAEapnf1WwTsHFlJK9/VG7lZXY2WfbV3PUVOy8Ktoq62/6xORLdg+h+zBmgAAAABJRU5ErkJggg==" /></span>
         <strong>Feature Flag</strong>
     </span>
@@ -45,6 +49,12 @@
             text-align: center;
             min-width: 100px;
         }
+        .badge.badge-not_found {
+            background-color: var(--gray-500);
+        }
+        .badge.badge-resolved {
+            background-color: var(--green-500);
+        }
         .badge.badge-enabled {
             background-color: var(--green-500);
         }
@@ -58,10 +68,10 @@
     <h2>Feature Flag</h2>
     <div class="sf-tabs">
         <div class="tab">
-            <h3 class="tab-title">Resolved <span class="badge">{{ collector.resolvedValues|length }}</span></h3>
+            <h3 class="tab-title">Resolved <span class="badge">{{ collector.resolved|length }}</span></h3>
 
             <div class="tab-content">
-                {% if collector.resolvedValues|length > 0 %}
+                {% if collector.resolved|length > 0 %}
                     <table>
                         <thead>
                         <tr>
@@ -70,44 +80,30 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for feature_name, value in collector.resolvedValues %}
+                        {% for feature_name, info in collector.resolved %}
                             <tr>
                                 <td>
                                     {{ feature_name }}
                                 </td>
                                 <td>
-                                    {% for check in collector.checks[feature_name] %}
-                                        {% set context_id = 'context-' ~ loop.parent.loop.index ~ '-' ~ loop.index %}
-                                        <div>
-                                            {% set result = check.is_enabled ? 'enabled' : 'disabled' %}
-                                            <span class="badge badge-{{ result }}">{{ result|capitalize }}</span>
-                                            <span><button type="button" class="btn btn-link text-small sf-toggle" data-toggle-selector="#{{ context_id }}" data-toggle-alt-content="Hide details">Show details</button></span>
-                                        </div>
+                                    {% set context_id = 'context-' ~ loop.index %}
+                                    <div>
+                                        <span class="badge badge-{{ info.status }}">{{ info.status|capitalize|replace({'_': ' '}) }}</span>
+                                        <span><button type="button" class="btn btn-link text-small sf-toggle" data-toggle-selector="#{{ context_id }}" data-toggle-alt-content="Hide details">Show details</button></span>
+                                    </div>
 
-                                        <div id="{{ context_id }}" class="context sf-toggle-content sf-toggle-hidden">
-                                            <table>
-                                                <tr>
-                                                    <th>Found</th>
-                                                    <td>{{ profiler_dump(check.found) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Resolved</th>
-                                                    <td>{{ profiler_dump(value, maxDepth=2) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Expected</th>
-                                                    <td>{{ profiler_dump(check.expected_value, maxDepth=2) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Calls</th>
-                                                    <td>{{ check.calls }}</td>
-                                                </tr>
-                                            </table>
-                                        </div>
-                                    {% else %}
-                                        <span class="badge badge-unknown">Not resolved</span>
-                                    {% endfor %}
-
+                                    <div id="{{ context_id }}" class="context sf-toggle-content sf-toggle-hidden">
+                                        <table>
+                                            <tr>
+                                                <th>Value</th>
+                                                <td>{{ profiler_dump(info.value, maxDepth=2) }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Calls</th>
+                                                <td>{{ info.calls }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -115,7 +111,7 @@
                     </table>
                 {% else %}
                     <div class="empty">
-                        <p>No features checked</p>
+                        <p>No features resolved</p>
                     </div>
                 {% endif %}
             </div>

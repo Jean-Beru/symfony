@@ -18,7 +18,7 @@ return static function (ContainerConfigurator $container) {
     $container->services()
 
         ->set('twig.runtime.feature_flag', FeatureFlagRuntime::class)
-            ->args([service('feature_flag.feature_checker')->nullOnInvalid()])
+            ->args([service('feature_flag.feature_checker')])
             ->tag('twig.runtime')
 
         ->set('twig.extension.feature_flag', FeatureFlagExtension::class)

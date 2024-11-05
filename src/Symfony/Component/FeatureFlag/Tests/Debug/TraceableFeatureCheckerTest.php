@@ -22,25 +22,22 @@ class TraceableFeatureCheckerTest extends TestCase
     {
         $featureChecker = new FeatureChecker(new InMemoryProvider([
             'feature_true' => fn () => true,
+            'feature_false' => fn () => false,
             'feature_integer' => fn () => 42,
             'feature_random' => fn () => random_int(1, 42),
         ]));
         $traceableFeatureChecker = new TraceableFeatureChecker($featureChecker);
 
         $this->assertTrue($traceableFeatureChecker->isEnabled('feature_true'));
-        $this->assertFalse($traceableFeatureChecker->isEnabled('feature_integer', 1));
+        $this->assertFalse($traceableFeatureChecker->isEnabled('feature_false'));
+        $this->assertSame(42, $traceableFeatureChecker->getValue('feature_integer'));
+        $this->assertSame(42, $traceableFeatureChecker->getValue('feature_integer'));
 
         $this->assertSame(
             [
-                'feature_true' => [['expectedValue' => true, 'isEnabled' => true, 'calls' => 1]],
-                'feature_integer' => [['expectedValue' => 1, 'isEnabled' => false, 'calls' => 1]],
-            ],
-            $traceableFeatureChecker->getChecks(),
-        );
-        $this->assertSame(
-            [
-                'feature_true' => true,
-                'feature_integer' => 42,
+                'feature_true' => ['status' => 'enabled', 'value' => true, 'calls' => 1],
+                'feature_false' => ['status' => 'disabled', 'value' => false, 'calls' => 1],
+                'feature_integer' => ['status' => 'resolved', 'value' => 42, 'calls' => 2],
             ],
             $traceableFeatureChecker->getResolvedValues(),
         );

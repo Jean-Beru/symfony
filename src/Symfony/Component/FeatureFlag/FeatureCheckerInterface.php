@@ -16,11 +16,7 @@ namespace Symfony\Component\FeatureFlag;
  */
 interface FeatureCheckerInterface
 {
-    /**
-     * @param string $featureName   the name of the feature to check
-     * @param mixed  $expectedValue comparison value required to determine if the feature is enabled
-     */
-    public function isEnabled(string $featureName, mixed $expectedValue = true): bool;
+    public function isEnabled(string $featureName): bool;
 
     public function getValue(string $featureName): mixed;
 }

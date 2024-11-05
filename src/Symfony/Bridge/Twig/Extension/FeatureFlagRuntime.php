@@ -16,13 +16,13 @@ use Symfony\Component\FeatureFlag\FeatureCheckerInterface;
 final class FeatureFlagRuntime
 {
     public function __construct(
-        private readonly FeatureCheckerInterface $featureChecker
+        private readonly FeatureCheckerInterface $featureChecker,
     ) {
     }
 
-    public function isEnabled(string $featureName, mixed $expectedValue = true): bool
+    public function isEnabled(string $featureName): bool
     {
-        return $this->featureChecker->isEnabled($featureName, $expectedValue);
+        return $this->featureChecker->isEnabled($featureName);
     }
 
     public function getValue(string $featureName): mixed
