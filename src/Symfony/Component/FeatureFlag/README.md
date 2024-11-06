@@ -50,11 +50,6 @@ $featureChecker->isEnabled('weekend'); // returns true on weekend
 // Check a not existing feature
 $featureChecker->isEnabled('not_a_feature'); // returns false
 
-// Check if a feature is enabled using an expected value
-$featureChecker->isEnabled('universe'); // returns false
-$featureChecker->isEnabled('universe', 7); // returns false
-$featureChecker->isEnabled('universe', 42); // returns true
-
 // Retrieve a feature value
 $featureChecker->getValue('random'); // returns 1, 2 or 3
 $featureChecker->getValue('random'); // returns the same value as above
