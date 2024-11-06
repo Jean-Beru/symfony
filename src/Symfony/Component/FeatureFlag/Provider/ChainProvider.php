@@ -22,26 +22,15 @@ final class ChainProvider implements ProviderInterface
     ) {
     }
 
-    public function has(string $featureName): bool
+    public function get(string $featureName): ?\Closure
     {
         foreach ($this->providers as $provider) {
-            if ($provider->has($featureName)) {
-                return true;
+            if ($feature = $provider->get($featureName)) {
+                return $feature;
             }
         }
 
-        return false;
-    }
-
-    public function get(string $featureName): \Closure
-    {
-        foreach ($this->providers as $provider) {
-            if ($provider->has($featureName)) {
-                return $provider->get($featureName);
-            }
-        }
-
-        return fn () => false;
+        return null;
     }
 
     public function getNames(): array

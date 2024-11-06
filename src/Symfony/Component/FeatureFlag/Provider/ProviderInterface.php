@@ -16,12 +16,10 @@ namespace Symfony\Component\FeatureFlag\Provider;
  */
 interface ProviderInterface
 {
-    public function has(string $featureName): bool;
-
     /**
-     * @return \Closure(): mixed
+     * @return ?\Closure(): mixed
      */
-    public function get(string $featureName): \Closure;
+    public function get(string $featureName): ?\Closure;
 
     /**
      * @return list<string>

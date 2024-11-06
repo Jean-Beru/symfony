@@ -26,20 +26,12 @@ class ChainProviderTests extends TestCase
                 'first' => fn () => true,
             ]),
             new InMemoryProvider([
-                'second' => fn () => true,
+                'second' => fn () => 42,
             ]),
             new InMemoryProvider([
                 'exception' => fn () => throw new \LogicException('Should not be called.'),
             ]),
         ]);
-    }
-
-    public function testHas()
-    {
-        $this->assertTrue($this->provider->has('first'));
-        $this->assertTrue($this->provider->has('second'));
-        $this->assertTrue($this->provider->has('exception'));
-        $this->assertFalse($this->provider->has('unknown'));
     }
 
     public function testGet()
@@ -55,7 +47,7 @@ class ChainProviderTests extends TestCase
         $feature = $this->provider->get('second');
 
         $this->assertIsCallable($feature);
-        $this->assertTrue($feature());
+        $this->assertSame(42, $feature());
     }
 
     public function testGetLazy()
@@ -67,8 +59,7 @@ class ChainProviderTests extends TestCase
     {
         $feature = $this->provider->get('unknown');
 
-        $this->assertIsCallable($feature);
-        $this->assertFalse($feature());
+        $this->assertNull($feature);
     }
 
     public function testGetNames()

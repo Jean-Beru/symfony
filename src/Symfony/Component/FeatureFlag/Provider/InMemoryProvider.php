@@ -24,14 +24,9 @@ final class InMemoryProvider implements ProviderInterface
     ) {
     }
 
-    public function has(string $featureName): bool
+    public function get(string $featureName): ?\Closure
     {
-        return \array_key_exists($featureName, $this->features);
-    }
-
-    public function get(string $featureName): \Closure
-    {
-        return $this->features[$featureName] ?? fn () => false;
+        return $this->features[$featureName] ?? null;
     }
 
     public function getNames(): array

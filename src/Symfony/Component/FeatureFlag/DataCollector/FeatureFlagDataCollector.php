@@ -39,7 +39,7 @@ final class FeatureFlagDataCollector extends DataCollector implements LateDataCo
         $this->data['resolved'] = [];
         foreach ($this->featureChecker->getResolvedValues() as $featureName => $info) {
             $this->data['resolved'][$featureName] = [
-                'status' => $this->provider->has($featureName) ? $info['status'] : 'not_found',
+                'status' => $this->provider->get($featureName) ? $info['status'] : 'not_found',
                 'value' => $this->cloneVar($info['value']),
                 'calls' => $info['calls'],
             ];

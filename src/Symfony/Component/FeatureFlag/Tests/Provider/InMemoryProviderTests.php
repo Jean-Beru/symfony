@@ -22,25 +22,20 @@ class InMemoryProviderTests extends TestCase
     {
         $this->provider = new InMemoryProvider([
             'first' => fn () => true,
-            'second' => fn () => false,
+            'second' => fn () => 42,
             'exception' => fn () => throw new \LogicException('Should not be called.'),
         ]);
-    }
-
-    public function testHas()
-    {
-        $this->assertTrue($this->provider->has('first'));
-        $this->assertTrue($this->provider->has('second'));
-        $this->assertTrue($this->provider->has('exception'));
-        $this->assertFalse($this->provider->has('unknown'));
     }
 
     public function testGet()
     {
         $feature = $this->provider->get('first');
-
         $this->assertIsCallable($feature);
         $this->assertTrue($feature());
+
+        $feature = $this->provider->get('second');
+        $this->assertIsCallable($feature);
+        $this->assertSame(42, $feature());
     }
 
     public function testGetLazy()
@@ -52,8 +47,7 @@ class InMemoryProviderTests extends TestCase
     {
         $feature = $this->provider->get('unknown');
 
-        $this->assertIsCallable($feature);
-        $this->assertFalse($feature());
+        $this->assertNull($feature);
     }
 
     public function testGetNames()

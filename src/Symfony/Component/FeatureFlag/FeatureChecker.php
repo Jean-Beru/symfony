@@ -32,6 +32,12 @@ final class FeatureChecker implements FeatureCheckerInterface
 
     public function getValue(string $featureName): mixed
     {
-        return $this->cache[$featureName] ??= $this->provider->get($featureName)();
+        if (isset($this->cache[$featureName])) {
+            return $this->cache[$featureName];
+        }
+
+        $feature = $this->provider->get($featureName) ?? fn () => false;
+
+        return $this->cache[$featureName] = $feature();
     }
 }

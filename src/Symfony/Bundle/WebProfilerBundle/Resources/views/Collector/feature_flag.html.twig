@@ -5,7 +5,7 @@
 {% block toolbar %}
     {% if 0 < collector.resolved|length %}
         {% set icon %}
-            <img alt="Feature Flag" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAABVElEQVRIie2UO0oEURBFzxM/YGroAgQNxETUwEzwiytQ8/GzAhfhEnQNYqaJ4IyCv1QjERQjB1HEQDkGU8qzmRkHNJwLTcOtqtNVr6sb2mrrX6X2qOvqsfpi63qJmjW1O2emDN4P7AHDQAW4BpaznEpcCRgHxsLfAR4z7xKYTyndFTu/VKvqtNqnXkR3VXW6zrQzETtTuwre+Y9J1I2AFeHWg2d1s5Gz2sxDPVHLGfxVfVLLjeBZ7XExL7wKQEd4g8AVsA8MAIvAB/DrA4AjYKiR15mZK8BbwA+A3hbg3003j9ZGelen1A51O86x8iu5VntUxyvnxnoAlzL4YdxnmsDnIqfUzPta0wv1I4Kbapf6EGs32wBeVU/VzoJ39rWmxQ9tFxgBboBbYDJjnlB76QmYAEapnf1WwTsHFlJK9/VG7lZXY2WfbV3PUVOy8Ktoq62/6xORLdg+h+zBmgAAAABJRU5ErkJggg==" />
+            {{ source('@WebProfiler/Icon/feature-flag.svg') }}
             <span class="sf-toolbar-value">{{ collector.resolved|length }}</span>
         {% endset %}
 
@@ -35,7 +35,7 @@
 
 {% block menu %}
     <span class="label {{ collector.resolved|length is same as(0) ? 'disabled' }}">
-        <span class="icon"><img alt="Feature Flag" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAABVElEQVRIie2UO0oEURBFzxM/YGroAgQNxETUwEzwiytQ8/GzAhfhEnQNYqaJ4IyCv1QjERQjB1HEQDkGU8qzmRkHNJwLTcOtqtNVr6sb2mrrX6X2qOvqsfpi63qJmjW1O2emDN4P7AHDQAW4BpaznEpcCRgHxsLfAR4z7xKYTyndFTu/VKvqtNqnXkR3VXW6zrQzETtTuwre+Y9J1I2AFeHWg2d1s5Gz2sxDPVHLGfxVfVLLjeBZ7XExL7wKQEd4g8AVsA8MAIvAB/DrA4AjYKiR15mZK8BbwA+A3hbg3003j9ZGelen1A51O86x8iu5VntUxyvnxnoAlzL4YdxnmsDnIqfUzPta0wv1I4Kbapf6EGs32wBeVU/VzoJ39rWmxQ9tFxgBboBbYDJjnlB76QmYAEapnf1WwTsHFlJK9/VG7lZXY2WfbV3PUVOy8Ktoq62/6xORLdg+h+zBmgAAAABJRU5ErkJggg==" /></span>
+        <span class="icon">{{ source('@WebProfiler/Icon/feature-flag.svg') }}</span>
         <strong>Feature Flag</strong>
     </span>
 {% endblock %}
