@@ -11,6 +11,7 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Symfony\Component\FeatureFlag\EventListener\FeatureAttributeListener;
 use Symfony\Component\FeatureFlag\FeatureChecker;
 use Symfony\Component\FeatureFlag\FeatureCheckerInterface;
 use Symfony\Component\FeatureFlag\Provider\ChainProvider;
@@ -37,5 +38,12 @@ return static function (ContainerConfigurator $container) {
                 '$provider' => service('feature_flag.provider'),
             ])
             ->alias(FeatureCheckerInterface::class, 'feature_flag.feature_checker')
+
+
+        ->set('feature_flag.feature_attribute_listener', FeatureAttributeListener::class)
+            ->args([
+                service('feature_flag.feature_checker'),
+            ])
+            ->tag('kernel.event_subscriber')
     ;
 };
