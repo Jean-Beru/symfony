@@ -76,4 +76,21 @@ class NativeHttpClientTest extends HttpClientTestCase
     {
         $this->markTestSkipped('NativeHttpClient doesn\'t support binding to unix sockets.');
     }
+
+    /**
+     * Because the HttpClientDataCollector resets the client when collecting data, we need to ensure that the response
+     * can be processed before and after the reset.
+     * This test will fail with "Undefined array key "127.0.0.1"" if broken.
+     */
+    public function testResponseCanBeProcessedAfterClientReset()
+    {
+        $client = $this->getHttpClient(__FUNCTION__);
+        $response = $client->request('GET', 'http://127.0.0.1:8057/timeout-body');
+
+        $response->getStatusCode();
+        $client->reset(); // Simulate a reset done by the HttpClientDataCollector
+        $response->getContent();
+
+        $this->addToAssertionCount(1);
+    }
 }
