@@ -1346,6 +1346,25 @@ class AutowirePassTest extends TestCase
         $this->assertSame(2, $container->getDefinition(AsDecoratorBaz::class)->getArgument(0)->getInvalidBehavior());
     }
 
+    public function testMultipleAsDecoratorAttribute()
+    {
+        $container = new ContainerBuilder();
+
+        $container->register(AsDecoratorMultipleFoo::class);
+        $container->register(AsDecoratorMultipleBar::class);
+        $container->register(AsDecoratorMultiple::class)->setAutowired(true)->setArgument(0, 'arg1');
+
+        (new ResolveClassPass())->process($container);
+        (new AutowireAsDecoratorPass())->process($container);
+        (new DecoratorServicePass())->process($container);
+        (new AutowirePass())->process($container);
+
+        $this->assertSame(AsDecoratorMultiple::class.'.brovYQA', (string) $container->getAlias(AsDecoratorMultipleFoo::class));
+        $this->assertSame(AsDecoratorMultiple::class.'.brovYQA.inner', (string) $container->getDefinition(AsDecoratorMultiple::class.'.brovYQA')->getArgument(1));
+        $this->assertSame(AsDecoratorMultiple::class.'.NeMNE1z', (string) $container->getAlias(AsDecoratorMultipleBar::class));
+        $this->assertSame(AsDecoratorMultiple::class.'.NeMNE1z.inner', (string) $container->getDefinition(AsDecoratorMultiple::class.'.NeMNE1z')->getArgument(1));
+    }
+
     public function testTypeSymbolExcluded()
     {
         $container = new ContainerBuilder();
