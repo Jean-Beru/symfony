@@ -88,6 +88,7 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Symfony\Component\HttpClient\CachingHttpClient;
 use Symfony\Component\HttpClient\Exception\ChunkCacheItemNotFoundException;
 use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\RecordHttpClient;
 use Symfony\Component\HttpClient\Retry\GenericRetryStrategy;
 use Symfony\Component\HttpClient\RetryableHttpClient;
 use Symfony\Component\HttpClient\ScopingHttpClient;
@@ -2719,6 +2720,8 @@ class FrameworkExtension extends Extension
             unset($scopeConfig['scope']);
             $cachingOptions = $scopeConfig['caching'] ?? ['enabled' => false];
             unset($scopeConfig['caching']);
+            $recordOptions = $scopeConfig['record'] ?? ['enabled' => false];
+            unset($scopeConfig['record']);
             $rateLimiter = $scopeConfig['rate_limiter'] ?? null;
             unset($scopeConfig['rate_limiter']);
             $retryOptions = $scopeConfig['retry_failed'] ?? ['enabled' => false];
@@ -2730,6 +2733,7 @@ class FrameworkExtension extends Extension
             // 3. ScopingHttpClient (15) -> resolves relative URLs and applies scope configuration
             // 4. CachingHttpClient (20) -> caches responses
             // 5. RetryableHttpClient (25) -> retries requests
+            // 5.5. RecordHttpClient (50) -> record and replay responses
             // 6. TraceableHttpClient (100) -> traces requests
             $container->register($name, HttpClientInterface::class)
                 ->setFactory('current')
@@ -2755,6 +2759,10 @@ class FrameworkExtension extends Extension
 
             if ($this->readConfigEnabled('http_client.scoped_clients.'.$name.'.caching', $container, $cachingOptions)) {
                 $this->registerCachingHttpClient($cachingOptions, $scopeConfig, $name, $container);
+            }
+
+            if ($this->readConfigEnabled('http_client.scoped_clients.'.$name.'.record', $container, $recordOptions)) {
+                $this->registerRecordHttpClient($recordOptions, $scopeConfig, $name, $container);
             }
 
             if (null !== $rateLimiter) {
@@ -2813,6 +2821,22 @@ class FrameworkExtension extends Extension
                 $defaultOptions,
                 $options['shared'],
                 $options['max_ttl'],
+            ]);
+    }
+
+    private function registerRecordHttpClient(array $options, array $defaultOptions, string $name, ContainerBuilder $container): void
+    {
+        if (!class_exists(RecordHttpClient::class)) {
+            throw new LogicException('Caching cannot be enabled as version 8.1+ of the HttpClient component is required.');
+        }
+
+        $container
+            ->register($name.'.record', RecordHttpClient::class)
+            ->setDecoratedService($name, null, 50)
+            ->setArguments([
+                new Reference('.inner'),
+                $options['folder'],
+                $options['mode'],
             ]);
     }
 

@@ -30,6 +30,7 @@ use Symfony\Component\Finder\Glob;
 use Symfony\Component\Form\Form;
 use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\RecordHttpClient;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\IpUtils;
 use Symfony\Component\JsonStreamer\StreamWriterInterface;
@@ -2039,6 +2040,7 @@ class Configuration implements ConfigurationInterface
                                     ->info('Rate limiter name to use for throttling requests.')
                                 ->end()
                                 ->append($this->createHttpClientCachingSection())
+                                ->append($this->createHttpClientRecordSection())
                                 ->append($this->createHttpClientRetrySection())
                             ->end()
                         ->end()
@@ -2186,6 +2188,7 @@ class Configuration implements ConfigurationInterface
                                         ->info('Rate limiter name to use for throttling requests.')
                                     ->end()
                                     ->append($this->createHttpClientCachingSection())
+                                    ->append($this->createHttpClientRecordSection())
                                     ->append($this->createHttpClientRetrySection())
                                 ->end()
                             ->end()
@@ -2219,6 +2222,28 @@ class Configuration implements ConfigurationInterface
                         ->info('The maximum TTL (in seconds) allowed for cached responses. Null means no cap.')
                         ->defaultNull()
                         ->min(0)
+                    ->end()
+                ->end();
+    }
+
+    private function createHttpClientRecordSection(): ArrayNodeDefinition
+    {
+        $root = new NodeBuilder();
+
+        return $root
+            ->arrayNode('record')
+                ->info('Record configuration.')
+                ->canBeEnabled()
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->enumNode('mode')
+                        ->info('The record mode to use.')
+                        ->values([RecordHttpClient::MODE_RECORD, RecordHttpClient::MODE_REPLAY, RecordHttpClient::MODE_RECORD_IF_MISSING])
+                        ->defaultValue(RecordHttpClient::MODE_REPLAY)
+                    ->end()
+                    ->stringNode('folder')
+                        ->info('The folder to use for storing the responses.')
+                        ->cannotBeEmpty()
                     ->end()
                 ->end();
     }

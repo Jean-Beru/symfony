@@ -11,6 +11,8 @@
 
 namespace Symfony\Component\HttpClient;
 
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpClient\Exception\InvalidArgumentException;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\Har\HarFile;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -19,52 +21,55 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 use Symfony\Contracts\HttpClient\ResponseStreamInterface;
 
-class RecorderHttpClient implements HttpClientInterface
+class RecordHttpClient implements HttpClientInterface
 {
     use HttpClientTrait;
 
     public const string MODE_REPLAY = 'replay';
     public const string MODE_RECORD_IF_MISSING = 'record_if_missing';
     public const string MODE_RECORD = 'record';
-    private HarFile $harFile;
+
+    private static string $harFilename = 'default';
+
 
     public function __construct(
-        private HttpClientInterface $client,
-        private string $harPath,
+        private readonly HttpClientInterface $client,
+        private readonly string $harFolder,
         private readonly string $mode,
     ) {
-        $this->setHarPath($this->harPath);
     }
 
-    public function setHarPath(string $harPath): void
+    public static function setHarFilename(string $filename): void
     {
-        $this->harPath = $harPath;
-        if (!file_exists($harPath) || !file_get_contents($harPath)) {
-            $this->harFile = HarFile::create();
-        } else {
-            $this->harFile = HarFile::createFromFile($harPath);
-        }
+        static::$harFilename = $filename;
     }
 
     public function request(string $method, string $url, array $options = []): ResponseInterface
     {
-        if (self::MODE_RECORD === $this->mode) {
-            $response = $this->client->request($method, $url, $options);
-            $this->harFile = $this->harFile->withEntry($response, $method, $url, $options);
-            file_put_contents($this->harPath, json_encode($this->harFile->toArray(), \JSON_PRETTY_PRINT));
+        $harPath = $this->harFolder.'/'.static::$harFilename;
+
+        if (file_exists($harPath) && file_get_contents($harPath)) {
+            $harFile = HarFile::createFromFile($harPath);
+        } else {
+            $harFile = HarFile::create();
         }
 
+        if (self::MODE_RECORD === $this->mode) {
+            $response = $this->client->request($method, $url, $options);
+            $harFile = $harFile->withEntry($response, $method, $url, $options);
+            (new Filesystem())->dumpFile($harPath, json_encode($harFile->toArray(), \JSON_PRETTY_PRINT));
+        }
 
         try {
-            $response = $this->harFile->findEntry($method, $url, $options);
+            $response = (new MockHttpClient($harFile->findEntry($method, $url, $options)))->request($method, $url, $options);
         } catch (TransportException $e) {
             if (self::MODE_RECORD_IF_MISSING !== $this->mode) {
                 throw $e;
             }
 
             $response = $this->client->request($method, $url, $options);
-            $this->harFile = $this->harFile->withEntry($response, $method, $url, $options);
-            file_put_contents($this->harPath, json_encode($this->harFile->toArray(), \JSON_PRETTY_PRINT));
+            $harFile = $harFile->withEntry($response, $method, $url, $options);
+            (new Filesystem())->dumpFile($harPath, json_encode($harFile->toArray(), \JSON_PRETTY_PRINT));
         }
 
         return $response;

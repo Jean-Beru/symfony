@@ -14,11 +14,11 @@ namespace Symfony\Component\HttpClient\Tests;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\Exception\TransportException;
 use Symfony\Component\HttpClient\MockHttpClient;
-use Symfony\Component\HttpClient\RecorderHttpClient;
+use Symfony\Component\HttpClient\RecordHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-class RecorderHttpClientTest extends TestCase
+class RecordHttpClientTest extends TestCase
 {
     private const FIXTURES_FOLDER = __DIR__.'/Fixtures/recorder/';
     private string|null $archiveFile = null;
@@ -33,10 +33,10 @@ class RecorderHttpClientTest extends TestCase
 
     public function testModeReplay()
     {
-        $client = new RecorderHttpClient(
+        $client = new RecordHttpClient(
             new MockHttpClient(),
             self::FIXTURES_FOLDER.'books.har',
-            RecorderHttpClient::MODE_REPLAY,
+            RecordHttpClient::MODE_REPLAY,
         );
 
         $response = $client->request('GET', 'https://example.com/api/books/1');
@@ -51,10 +51,10 @@ class RecorderHttpClientTest extends TestCase
     {
         $this->expectException(TransportException::class);
 
-        $client = new RecorderHttpClient(
+        $client = new RecordHttpClient(
             new MockHttpClient(),
             self::FIXTURES_FOLDER.'books.har',
-            RecorderHttpClient::MODE_REPLAY,
+            RecordHttpClient::MODE_REPLAY,
         );
 
         $client->request('GET', '/not_found.json');
@@ -69,10 +69,10 @@ class RecorderHttpClientTest extends TestCase
 
         $this->archiveFile = tempnam(sys_get_temp_dir(), 'http_client_recorder_');
 
-        $client = new RecorderHttpClient(
+        $client = new RecordHttpClient(
             $originClient,
             $this->archiveFile,
-            RecorderHttpClient::MODE_RECORD,
+            RecordHttpClient::MODE_RECORD,
         );
         $client->request('GET', 'https://example.com/example');
 
